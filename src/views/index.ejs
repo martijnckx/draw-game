@@ -77,8 +77,8 @@
             <div class="drawing-board">
                 <div class="canvas-container">
                     <div class="waiting-area" v-if="!gameStarted">
-                        <p>Send the room code to your friends so they can play along. You can click on the code at the top right to copy an invitation link. <span v-if="me.owner">When everyone is there, start the game by pressing the button!</span><span v-if="!me.owner"><br><br>The creator of the room will start the game.</span></p>
-                        <button class="start-game-button" type="button" v-on:click="startGame" v-if="me.owner" :disabled="players.length &lt; 2">Start het spel</button>
+                        <p>Send the room code to your friends so they can play along. You can click on the code at the top right to copy an invitation link. <span v-if="me.owner"><br><br>When everyone has joined, start the game by pressing the button!</span><span v-if="!me.owner"><br><br>The creator of the room will start the game.</span></p>
+                        <button class="start-game-button" type="button" v-on:click="startGame" v-if="me.owner" :disabled="players.length &lt; 2">Start the game</button>
                     </div>
                     <canvas v-bind:class="{ 'erasing': eraser }"id="canvas" width="580" height="580">Your browser does not support a &lt;canvas&gt;. Use a more modern browser to play this game.</canvas>
                     <div class="controls" v-if="drawerId === me.id">
