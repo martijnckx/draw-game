@@ -23,7 +23,7 @@
 
         <div class="login-container" v-if="!loggedIn">
             <div class="login"  v-bind:class="{ 'mode-selector': !loginMode, 'new-game': loginMode == 'new' }">
-                <span class="info" v-if="!loginMode">Welkom bij Pictionary!</span>
+                <span class="info" v-if="!loginMode">Welcome to Pictionary!</span>
                 <div class="login-mode-buttons-container" v-if="!loginMode">
                     <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('new')">New game</button>
                     <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('join')">Join a game</button>
