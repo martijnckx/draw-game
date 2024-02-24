@@ -1,0 +1,891 @@
+@import url('https://fonts.googleapis.com/css?family=Chela+One&display=swap');
+
+$blue: #6183ff;
+$lightblue: #e0e7ff;
+$grayblue: #dde3ff;
+$gray: #f4f3fa;
+$green: #00c745;
+$red: #ff0000;
+$yellow: #ffd800;
+
+$canvasSize: 580px;
+$canvasContainerSize: 600px;
+
+* {
+	padding: 0;
+	margin: 0;
+	box-sizing: border-box;
+}
+
+html,
+body {
+	width: 100%;
+	height: 100%;
+	font-family: 'Chela One', 'Courier', cursive;
+	color: $blue;
+}
+
+label,
+button,
+.clickable {
+	cursor: pointer;
+}
+
+input[type='checkbox'],
+.hidden,
+.hidden * {
+	position: fixed !important;
+	left: -9999px !important;
+}
+
+.noscript {
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	font-size: 40px;
+	position: fixed;
+	background: white;
+	width: 100vw;
+	height: 100vh;
+	top: 0;
+	left: 0;
+	z-index: 10;
+
+	.noscript-message {
+		display: block;
+		text-align: center;
+		width: 600px;
+		max-width: 90%;
+	}
+}
+
+.container {
+	padding: 40px 55px;
+	display: flex;
+	position: relative;
+	width: 100%;
+	height: 100%;
+	flex-flow: row nowrap;
+	justify-content: space-between;
+
+	.notifier-container {
+		width: 100%;
+		height: 50px;
+		position: fixed;
+		top: 25px;
+		left: 0;
+		display: flex;
+		justify-content: center;
+		align-items: center;
+		z-index: 20;
+		pointer-events: none;
+
+		.notifier {
+			box-shadow: 5px 5px 5px 0px rgba(0,0,0,0.13);
+			height: 100%;
+			line-height: 50px;
+			font-size: 40px;
+			color: white;
+			padding: 0 30px;
+			background: $red;
+
+			&.error {
+				animation: vibrate 3s cubic-bezier(.36, .07, .19, .97) infinite;
+				background: $red;
+			}
+
+			&.info {
+				background: $blue;
+			}
+
+			&.success {
+				background: $green;
+			}
+		}
+	}
+
+	.login-container {
+		display: flex;
+		position: fixed;
+		width: 100vw;
+		height: 100vh;
+		top: 0;
+		left: 0;
+		background: white;
+		z-index: 5;
+		justify-content: center;
+		align-items: center;
+
+		.bottom {
+			z-index: 7;
+		}
+
+		.login {
+			z-index: 8;
+			width: 660px;
+			max-width: 90%;
+			height: 560px;
+			color: white;
+			font-size: 50px;
+			background: $blue;
+			display: flex;
+			flex-flow: column nowrap;
+			align-items: center;
+			justify-content: space-evenly;
+
+			&.mode-selector, &.new-game {
+				height: 450px;
+			}
+
+			.login-mode-button {
+				font-family: 'Chela One', 'Courier', cursive;
+				display: block;
+				border: 5px solid white;
+				background: $blue;
+				color: white;
+				width: 350px;
+				height: 75px;
+				line-height: 65px;
+				font-size: 40px;
+
+				&:hover {
+					border: 10px solid white;
+					line-height: 45px;
+				}
+
+				&:first-child {
+					margin-bottom: 15px;
+				}
+			}
+
+			.login-form {
+				display: flex;
+				flex-flow: column nowrap;
+				align-items: center;
+				justify-content: space-between;
+
+				.input-container {
+					display: flex;
+					align-items: center;
+
+					&.login-name-container {
+						margin-top: 15px;
+					}
+
+					label {
+						width: 150px;
+						margin-right: 30px;
+						display: block;
+						text-align: right;
+					}
+
+					input {
+						width: 330px;
+						height: 67px;
+						background: white;
+						font-family: 'Chela One', 'Courier', cursive;
+						font-size: 50px;
+						padding: 0 20px;
+						color: $blue;
+						border: none;
+					}
+				}
+			}
+
+			.login-submit {
+				font-family: 'Chela One', 'Courier', cursive;
+				display: block;
+				border: 5px solid white;
+				background: $blue;
+				color: white;
+				width: 350px;
+				height: 75px;
+				line-height: 65px;
+				font-size: 40px;
+
+				&:hover:enabled {
+					border: 10px solid white;
+					line-height: 45px;
+				}
+
+				&:disabled {
+					opacity: 0.4;
+					cursor: not-allowed;
+				}
+			}
+		}
+	}
+
+	.left {
+		display: flex;
+		flex-flow: column nowrap;
+		justify-content: flex-start;
+
+		.title {
+			z-index: 7;
+			font-size: 40px;
+			margin-bottom: 80px;
+		}
+
+		.rtc {
+			display: flex;
+			flex-flow: column nowrap;
+			justify-content: flex-start;
+
+			.rtc-start {
+				font-family: Chela One, Courier, cursive;
+				display: block;
+				border: 5px solid #6183ff;
+				background: white;
+				color: #6183ff;
+				width: 300px;
+				height: 75px;
+				line-height: 65px;
+				font-size: 40px;
+
+				&:hover {
+					border: 10px solid #6183ff;
+					line-height: 45px;
+				}
+			}
+
+			.mute {
+				margin-bottom: 20px;
+				font-size: 30px;
+
+				.styled-checkbox {
+					margin-left: 15px;
+					width: 30px;
+					height: 30px;
+					display: inline-block;
+					border: 5px solid $blue;
+					margin-bottom: -5px;
+				}
+
+				#mute:checked~.styled-checkbox {
+					background: $green;
+				}
+			}
+
+			.cameras {
+				display: flex;
+				flex-flow: column nowrap;
+				justify-content: flex-start;
+
+				.camera {
+					box-sizing: content-box;
+					width: 260px;
+					border: 5px solid $blue;
+					margin-bottom: 20px;
+				}
+			}
+		}
+	}
+
+	.center {
+		display: flex;
+		flex-flow: column;
+		justify-content: space-between;
+		align-items: center;
+
+		.objective {
+			position: relative;
+
+			.info {
+				font-size: 30px;
+			}
+
+			.goal {
+				font-size: 50px;
+				text-transform: uppercase;
+				margin-left: 5px;
+			}
+
+			&::after {
+				content: '';
+				z-index: -1;
+				position: absolute;
+				display: block;
+				width: 110%;
+				left: -5%;
+				bottom: 0;
+				height: 20px;
+				background: $gray;
+			}
+		}
+
+		.drawing-board {
+			display: flex;
+			flex-flow: column nowrap;
+			justify-content: space-around;
+
+			.canvas-container {
+				position: relative;
+				display: flex;
+				flex-flow: row nowrap;
+				justify-content: flex-start;
+				background: $blue;
+
+				.waiting-area {
+					width: $canvasSize;
+					height: $canvasSize;
+					display: flex;
+					justify-content: center;
+					align-items: center;
+					position: absolute;
+					top: 10px;
+					left: 10px;
+					z-index: 1;
+					flex-direction: column;
+					text-align: center;
+					box-sizing: border-box;
+					padding: 50px;
+					font-size: 30px;
+
+					.start-game-button {
+						font-family: Chela One, Courier, cursive;
+						display: block;
+						border: 5px solid #6183ff;
+						background: white;
+						color: #6183ff;
+						width: 300px;
+						height: 75px;
+						line-height: 65px;
+						font-size: 40px;
+						margin-top: 30px;
+
+						&:hover:enabled {
+							border: 10px solid #6183ff;
+							line-height: 45px;
+						}
+		
+						&:disabled {
+							opacity: 0.4;
+							cursor: not-allowed;
+						}
+					}
+				}
+
+				canvas {
+					cursor: crosshair;
+					position: relative;
+					background: white;
+					width: $canvasSize;
+					height: $canvasSize;
+					margin-top: 10px;
+					margin-left: 10px;
+
+					&.erasing {
+						cursor: url('../icons/eraser-circle-36.png') 18 18, crosshair;
+					}
+				}
+
+				.controls {
+					position: absolute;
+					right: -70px;
+					top: 0;
+					width: 60px;
+					margin-left: 10px;
+					height: 240px;
+					z-index: 1;
+					background: $blue;
+					color: white;
+
+					.control {
+						display: block;
+						width: 100%;
+						height: calc(100% / 3);
+						display: flex;
+						justify-content: center;
+						align-items: center;
+
+						.loading-container {
+							position: absolute;
+							z-index: -1;
+							opacity: 0.3;
+
+							&.animate {
+								-webkit-animation: opacity 1.01s linear ;
+								-moz-animation: opacity 1.01s linear ;
+								animation: opacity 1.01s linear both;  
+							}
+
+							#loading {
+								width: 50px;
+								height: 50px;
+								margin: 30px auto;
+								position: relative;
+
+								.outer-shadow, .inner-shadow {
+									z-index: 4;
+									position: absolute;
+									width: 100%;
+									height: 100%;
+									border-radius: 100%;
+								}
+
+								.inner-shadow {
+									top: 50%;
+									left: 50%;
+									width: 40px;
+									height: 40px;
+									margin-left: -20px;
+									margin-top: -20px;
+									border-radius: 100%;
+									background-color: $blue;
+								}
+
+								.hold {
+									position: absolute;
+									width: 100%;
+									height: 100%;
+									clip: rect(0px, 50px, 50px, 25px);
+									border-radius: 100%;
+									background-color: $blue;
+								}
+
+								.fill, .dot span {
+									background-color: white;
+								}
+
+								.fill {
+									position: absolute;
+									width: 100%;
+									height: 100%;
+									border-radius: 100%;
+									clip: rect(0px, 25px, 50px, 0px);
+								}
+
+								.left {
+									.fill {
+										z-index: 1;
+									}
+									&.animate {
+										.fill {
+											-webkit-animation: left 0.5s linear ;
+											-moz-animation: left 0.5s linear ;
+											animation: left 0.5s linear both;  
+										}
+									}
+								} 
+
+								@keyframes left {
+									0%{-webkit-transform:rotate(0deg);}
+									100%{transform:rotate(180deg);}
+								}
+
+								@-webkit-keyframes left {
+									0%{-webkit-transform:rotate(0deg);}
+									100%{-webkit-transform:rotate(180deg);}
+								}
+
+								@keyframes opacity {
+									0%{opacity:0.3;}
+									99%{opacity: 0.3;}
+									100%{opacity: 1;}
+								}
+
+								@-webkit-keyframes opacity {
+									0%{opacity:0.3;}
+									99%{opacity: 0.3;}
+									100%{opacity: 1;}
+								}
+
+								.right{
+									z-index: 3;
+									-webkit-transform: rotate(180deg);
+									-moz-transform: rotate(180deg);
+									transform: rotate(180deg);
+
+									.fill {
+										z-index: 3;
+									}
+
+									&.animate {
+										-webkit-transform: rotate(180deg);
+										-moz-transform: rotate(180deg);
+										transform: rotate(180deg);
+
+										.fill {
+											-webkit-animation: right 0.5s linear;
+											-moz-animation: right 0.5s linear;
+											animation: right 0.5s linear both;
+											-webkit-animation-delay: 0.5s;
+											-moz-animation-delay: 0.5s;
+											animation-delay: 0.5s;
+										}
+									}
+								}
+
+								@keyframes right {
+									0%{-webkit-transform:rotate(0deg);}
+									100%{transform:rotate(180deg);}
+								}
+
+								@-webkit-keyframes right {
+									0% {
+										transform: rotate(0deg);
+									}
+									100% {
+										transform: rotate(180deg);
+									}
+								}
+
+								.inner-shadow img {
+									margin-left: 8px;margin-top: 7px;
+								}
+							}
+
+						}
+
+						svg {
+							width: 30px;
+							height: 30px;
+							filter: brightness(80%);
+						}
+
+						&.current-color svg {
+							filter: brightness(100%);
+						}
+
+						&.active svg{
+							filter: brightness(100%);
+						}
+
+						&:hover svg {
+							filter: brightness(100%);
+						}
+
+						.select-color-toggle {
+							width: 40px;
+							height: 40px;
+							border-radius: 50%;
+							border: 3px solid white;
+							background: black;
+						}
+					}
+				}
+
+				.color-selector {
+					position: absolute;
+					right: -70px;
+					top: 250px;
+					width: 60px;
+					margin-left: 10px;
+					height: 480px;
+					z-index: 1;
+					background: $lightblue;
+					color: white;
+					display: none;
+
+					.color-container {
+						width: 100%;
+						height: calc(100% / 8);
+						display: flex;
+						justify-content: center;
+						align-items: center;
+
+						.color {
+							width: 40px;
+							height: 40px;
+							border-radius: 50%;
+							background: black;
+
+							&.black {
+								background: black;
+							}
+
+							&.red {
+								background: red;
+							}
+
+							&.green {
+								background: green;
+							}
+
+							&.blue {
+								background: blue;
+							}
+
+							&.yellow {
+								background: yellow;
+							}
+
+							&.brown {
+								background: brown;
+							}
+
+							&.purple {
+								background: purple;
+							}
+
+							&.white {
+								background: white;
+							}
+
+							&.orange {
+								background: orange;
+							}
+						}
+					}
+				}
+
+				#color-selector-boolean:checked~.color-selector {
+					display: block;
+				}
+			}
+
+			.chat-container {
+				width: $canvasContainerSize;
+				height: 175px;
+				background: $blue;
+				color: white;
+				text-align: left;
+				padding: 10px;
+				padding-top: 0;
+				font-size: 20px;
+				display: flex;
+				flex-flow: column nowrap;
+				justify-content: space-between;
+
+				.chat {
+					max-height: 130px;
+					overflow-y: auto;
+					list-style-type: none;
+
+					.message-container {
+						width: 100%;
+						margin-bottom: 3px;
+
+						.name {
+							display: inline-block;
+							color: $grayblue;
+							width: 80px;
+						}
+
+						&.announcement {
+							color: $yellow;
+						}
+					}
+				}
+
+				.chat-input-container {
+					.chat-input {
+						width: 100%;
+						background: white;
+						border: none;
+						height: 30px;
+						padding: 0 10px;
+						font-size: 20px;
+						font-family: "Chela One";
+						color: $blue;
+
+						&::placeholder {
+							color: $lightblue;
+						}
+					}
+				}
+			}
+		}
+	}
+
+	.right {
+		display: flex;
+		flex-flow: column nowrap;
+		justify-content: space-between;
+		align-content: flex-end;
+
+		.room-container {
+			display: flex;
+			flex-flow: column nowrap;
+			width: 200px;
+			text-align: center;
+
+			.room-name {
+				width: 100%;
+				background: $blue;
+				color: white;
+				font-size: 20px;
+				padding: 15px 0;
+				position: relative;
+
+				.room-id {
+					font-size: 35px;
+				}
+
+				.copy-tooltip {
+					display: none;
+					position: absolute;
+					color: $blue;
+					top: -30px;
+					font-size: 15px;
+					width: 100%;
+					opacity: 0.7;
+
+					&.error {
+						animation: vibrate 1s cubic-bezier(.36, .07, .19, .97) infinite;
+					}
+
+					&::after {
+						content: '';
+						display: block;
+						border: 5px solid rgba(255,255,255,0);
+						border-top: 5px solid $blue;
+						width: 0;
+						height: 0;
+						position: absolute;
+						top: 18px;
+						left: 97px;
+					}
+				}
+
+				#room-code {
+					opacity: 0;
+					position: fixed;
+					left: -99999px;
+				}
+
+				&:hover .room-copy svg {
+					animation: wiggle 0.5s ease-in-out infinite;
+				}
+
+				&:hover .copy-tooltip {
+					display: block;
+				}
+			}
+
+			
+
+			.players {
+				list-style-type: none;
+				width: 100%;
+				font-size: 30px;
+
+				.player {
+					position: relative;
+					padding: 5px 0;
+
+					.score {
+						font-size: 0.7em;
+
+						.top-icon {
+							svg {
+								width: 10px;
+								height: 20px;
+							}
+							&.top-guesser svg {
+								width: 23px;
+								height: 23px;
+							}
+						}
+					}
+
+					&:nth-child(even) {
+						background: $lightblue;
+					}
+
+					&::before {
+						display: inline-block;
+						margin-right: 10px;
+						content: '';
+						width: 15px;
+						height: 15px;
+						box-sizing: border-box;
+						border: 2px solid $green;
+						border-radius: 50%;
+					}
+
+					&.correct::before {
+						background: $green;
+					}
+
+					&.drawing::before {
+						background: $red;
+						border: none;
+					}
+
+					&.new::before {
+						background: #dbdbdb;
+						border: none;
+					}
+
+					&.me {
+						.player-name::after {
+							content: '';
+							display: inline-block;
+							box-sizing: content-box;
+							width: 0;
+							height: 0;
+							transform: scale(0.5);
+							position: absolute;
+							top: 14px;
+							border: 10px solid rgba(255, 255, 255, 0);
+							border-right: 10px solid $blue;
+						}
+					}
+				}
+			}
+		}
+
+		.timer {
+			font-size: 30px;
+			text-align: right;
+
+			&.close {
+				color: orange;
+			}
+
+			&.urgent {
+				color: $red;
+			}
+
+			.seconds {
+				font-size: 50px;
+			}
+		}
+	}
+}
+
+.bottom {
+	position: absolute;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 30%;
+	background: $gray;
+	z-index: -1;
+}
+
+@keyframes vibrate {
+	0%, 2%, 4%, 6%, 8%, 10%, 12%, 14%, 16%, 18% {
+	  -webkit-transform: translate3d(-2px, 0, 0);
+			  transform: translate3d(-2px, 0, 0);
+	}
+	1%, 3%, 5%, 7%, 9%, 11%, 13%, 15%, 17%, 19% {
+	  -webkit-transform: translate3d(2px, 0, 0);
+			  transform: translate3d(2px, 0, 0);
+	}
+	20%, 100% {
+	  -webkit-transform: translate3d(0, 0, 0);
+			  transform: translate3d(0, 0, 0);
+	}
+}
+
+@keyframes wiggle {
+	0% {
+		transform: rotate(0deg);
+	}
+	24% {
+		transform: rotate(12deg);
+	}
+	50% {
+		transform: rotate(0deg);
+	}
+	75% {
+		transform: rotate(-12deg);
+	}
+	100% {
+		transform: rotate(0deg);
+	}
+}
+  

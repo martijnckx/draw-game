@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <title>Pictionary</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="main.css" rel="stylesheet" type="text/css">
+</head>
+
+<body>
+    <noscript class="noscript">
+        <span class="noscript-message">Je hebt JavaScript nodig om Pictionary te spelen. Zet JavaScript aan of gebruik
+            een modernere browser.</span>
+    </noscript>
+    <div id="app" class="container">
+
+        <div class="notifier-container" v-if="notifyMessage">
+            <div class="notifier" v-bind:class="{'error': notifyStyle === 'error', 'info': notifyStyle === 'info', 'success': notifyStyle === 'success', }">
+                    {{notifyMessage}}
+            </div>
+        </div>
+
+        <div class="login-container" v-if="!loggedIn">
+            <div class="login"  v-bind:class="{ 'mode-selector': !loginMode, 'new-game': loginMode == 'new' }">
+                <span class="info" v-if="!loginMode">Welkom bij Pictionary!</span>
+                <div class="login-mode-buttons-container" v-if="!loginMode">
+                    <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('new')">Nieuw spel</button>
+                    <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('join')">Meedoen</button>
+                </div>
+                <template v-if="loginMode">
+                    <span class="info">Je kan bijna beginnen.</span>
+                    <form action="#" class="login-form" v-on:submit="login">
+                        <div class="login-room-container input-container" v-if="loginMode !== 'new'">
+                            <label for="login-room-input" class="login-room-label">Room</label>
+                            <input v-model="room" type="text" name="room" id="login-room-input" maxlength="4" v-on:focus="roomInClipboard">
+                        </div>
+                        <div class="login-name-container input-container">
+                            <label for="login-name-input" class="login-name-label">Je naam</label>
+                            <input v-model="me.name" type="text" name="name" id="login-name-input" maxlength="12">
+                        </div>
+                    </form>
+                    <button type="button" class="login-submit" v-on:click="login" :disabled="loginMode !== 'new' && room.trim().length !== 4 || me.name.trim().length &lt; 1 || me.name.trim().length &gt; 12">Start!</button>
+                </template>
+            </div>
+            <div class="bottom"></div>
+        </div>
+
+        <div class="left">
+            <h1 class="title" title="door Isaac en Martijn">
+                Pictionary
+            </h1>
+            <div class="rtc">
+                <div class="rtc-start-container" v-if="!rtcStarted">
+                    <button class="rtc-start" type="button" v-on:click="startRTC">Start Videochat</button>
+                </div>
+                <div class="mute" v-bind:class="{ hidden: !rtcStarted }">
+                    <input v-model="muteEveryone" type="checkbox" id="mute" name=mute v-on:change="toggleMute">
+                    <label for="mute">Mute iedereen:</label>
+                    <label for="mute" class="styled-checkbox clickable"></label>
+                </div>
+                <div class="cameras" id="cameras" v-bind:class="{ hidden: !rtcStarted }">
+                    <!-- Videos in here look like this, with a srcObject: -->
+                    <!-- <video playsinline autoplay class="camera"></video> -->
+                    <video v-if="getMyStream()" :src-object.prop.camel="getMyStream()" muted playsinline autoplay class="camera"></video>
+                    <video v-for="stream in getStreams()" :src-object.prop.camel="stream.mediaStream" :muted="muted" playsinline autoplay controls class="camera"></video>
+                </div>
+            </div>
+        </div>
+        <main class="center">
+            <div class="objective">
+                <span class="info" v-if="!gameStarted">Wacht op de volgende ronde...</span>
+                <span class="info" v-if="gameStarted && !word">Raad het woord!</span>
+                <span class="info" v-if="gameStarted && word">Teken </span>
+                <span class="goal" v-if="gameStarted && word">{{word}}</span>
+            </div>
+            <div class="drawing-board">
+                <div class="canvas-container">
+                    <div class="waiting-area" v-if="!gameStarted">
+                        <p>Stuur de room-code naar je vrienden, zodat ze kunnen meespelen. Je kan rechtsboven op de code klikken om een uitnodigings-link te kopiëren. <span v-if="me.owner">Wanneer iedereen er is, start je het spel door op de knop te drukken!</span><span v-if="!me.owner"><br><br>De maker van de room zal het spel starten.</span></p>
+                        <button class="start-game-button" type="button" v-on:click="startGame" v-if="me.owner" :disabled="players.length &lt; 2">Start het spel</button>
+                    </div>
+                    <canvas v-bind:class="{ 'erasing': eraser }"id="canvas" width="580" height="580">Je browser ondersteunt geen &lt;canvas&gt;. Gebruik
+                        een
+                        modernere browser om te
+                        spelen.</canvas>
+                    <div class="controls" v-if="drawerId === me.id">
+                        <div class="control pencil clickable" v-bind:class="{ active: !eraser && !fillBucket }"
+                            @click="useEraser(false)">
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                version="1.1"  x="0px" y="0px" width="512px" height="512px"
+                                viewBox="0 0 528.899 528.899" style="enable-background:new 0 0 528.899 528.899;"
+                                xml:space="preserve" class="">
+                                <g>
+                                    <g>
+                                        <path
+                                            d="M328.883,89.125l107.59,107.589l-272.34,272.34L56.604,361.465L328.883,89.125z M518.113,63.177l-47.981-47.981   c-18.543-18.543-48.653-18.543-67.259,0l-45.961,45.961l107.59,107.59l53.611-53.611   C532.495,100.753,532.495,77.559,518.113,63.177z M0.3,512.69c-1.958,8.812,5.998,16.708,14.811,14.565l119.891-29.069   L27.473,390.597L0.3,512.69z"
+                                            data-original="#000000" class="active-path" data-old_color="#000000"
+                                            fill="#FFFFFF" />
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                        <div class="control eraser clickable" v-bind:class="{ active: eraser }"
+                            @click="useEraser(true)" @mousedown="startClearCanvas" @mouseleave="stopClearCanvas" @mouseup="stopClearCanvas" @touchstart="startClearCanvas" @touchend="stopClearCanvas" @touchcancel="stopClearCanvas">
+                            <div class="loading-container" v-bind:class=" { 'animate': clearCanvasLoading } ">
+                                <div id='loading'>
+                                    <div class='inner-shadow'></div>
+                                    <div class='hold left' v-bind:class=" { 'animate': clearCanvasLoading } ">
+                                        <div class='fill'></div>
+                                    </div>
+                                    <div class='hold right' v-bind:class=" { 'animate': clearCanvasLoading } ">
+                                        <div class='fill'></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+                                version="1.1" x="0px" y="0px" width="512px" height="512px"
+                                viewBox="0 0 548.157 548.157" style="enable-background:new 0 0 548.157 548.157;"
+                                xml:space="preserve" class="">
+                                <g>
+                                    <g>
+                                        <path
+                                            d="M545.027,112.765c-3.046-6.471-7.57-11.657-13.565-15.555c-5.996-3.9-12.614-5.852-19.846-5.852H292.351   c-11.04,0-20.175,4.184-27.408,12.56L9.13,396.279c-4.758,5.328-7.661,11.56-8.708,18.698c-1.049,7.139-0.144,13.941,2.712,20.417   c3.044,6.468,7.564,11.652,13.561,15.553c5.997,3.898,12.612,5.853,19.845,5.853h219.268c11.042,0,20.177-4.179,27.41-12.56   l255.813-292.363c4.75-5.33,7.655-11.561,8.699-18.699C548.788,126.039,547.877,119.238,545.027,112.765z M255.811,420.254H36.54   l95.93-109.632h219.27L255.811,420.254z"
+                                            data-original="#000000" class="active-path" data-old_color="#000000"
+                                            fill="#FFFFFF" />
+                                    </g>
+                                </g>
+                            </svg>
+                        </div>
+                        <label for="color-selector-boolean" class="control current-color clickable">
+                            <span class="select-color-toggle" v-bind:style="{ background: colour }"></span>
+                        </label>
+                    </div>
+                    <input type="checkbox" name="color-selector-boolean" id="color-selector-boolean" v-model="selectColorsVisible">
+                    <div class="color-selector">
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color black" @click="setColour('black')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color white" @click="setColour('white')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color red" @click="setColour('red')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color green" @click="setColour('green')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color blue" @click="setColour('blue')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color yellow"
+                                @click="setColour('yellow')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color brown" @click="setColour('brown')"></label>
+                        </div>
+                        <div class="color-container">
+                            <label for="color-selector-boolean" class="color orange"
+                                @click="setColour('orange')"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="chat-container">
+                    <ul class="chat" id="chat">
+                        <li class="message-container" v-for="message in messages" v-bind:class="{ announcement: message.id === 'system' }">
+                            <template v-if="message.id !== 'system'">
+                                <span class="name">{{getPlayerName(message.id)}}</span>
+                                <span class="message">{{message.content}}</span>
+                            </template>
+                            <template v-if="message.id === 'system'">
+                                {{message.content}}
+                            </template>
+                        </li>
+                    </ul>
+                    <form action="#" id="chat-input-form" class="chat-input-container"  v-on:submit="sendChatMessage">
+                        <input v-model="chatMessage" type="text" placeholder="Begin te typen..." class="chat-input"  maxlength="100">
+                    </form>
+                </div>
+            </div>
+        </main>
+        <div class="right">
+            <div class="room-container">
+                <div class="room-name clickable" v-on:click="copyRoomInvite">
+                    Room
+                    <span class="room-id">{{room ? room : "????"}}</span>
+                    <span class="room-copy">
+                        <svg xmlns="http://www.w3.org/2000/svg" height="20px" viewBox="-21 0 512 512" width="20px" class=""><g><path d="m186.667969 416c-49.984375 0-90.667969-40.683594-90.667969-90.667969v-218.664062h-37.332031c-32.363281 0-58.667969 26.300781-58.667969 58.664062v288c0 32.363281 26.304688 58.667969 58.667969 58.667969h266.664062c32.363281 0 58.667969-26.304688 58.667969-58.667969v-37.332031zm0 0" data-original="#000000" class="active-path" data-old_color="#000000" fill="#FFFFFF"/><path d="m469.332031 58.667969c0-32.40625-26.261719-58.667969-58.664062-58.667969h-224c-32.40625 0-58.667969 26.261719-58.667969 58.667969v266.664062c0 32.40625 26.261719 58.667969 58.667969 58.667969h224c32.402343 0 58.664062-26.261719 58.664062-58.667969zm0 0" data-original="#000000" class="active-path" data-old_color="#000000" fill="#FFFFFF"/></g> </svg>
+                    </span>
+                    <div class="copy-tooltip" v-bind:class=" {'error': copyTooltip === 'Er ging iets mis'} ">
+                        {{copyTooltip}}
+                    </div>
+                    <textarea type="text" id="room-code">{{getInviteText()}}</textarea>
+                </div>
+                <ul class="players">
+                    <li v-for="player in players" class="player guessing" v-bind:class="{'drawing': player.status === 'drawing', 'correct': player.status === 'correct', 'new': player.status === 'new', 'me': me.id === player.id}">
+                        <span class="player-name">{{player.name ? player.name : "Anoniem"}}</span>
+
+                        <div class="score">
+                            <span class="top-icon top-drawer">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200.5 454.0579"><g data-name="Layer 2"><g data-name="Capa 1"><path d="M18.1972,123.041a10.3168,10.3168,0,0,1,10.3171-10.3171H50.4109a10.3188,10.3188,0,0,1,10.1346,8.3838L67.92,159.7738l7.6246-38.7269a10.3163,10.3163,0,0,1,10.123-8.3235h47.4973a10.3147,10.3147,0,0,1,9.7378,6.9092l2.1293,6.0833,2.3962-6.3289a10.3168,10.3168,0,0,1,9.6488-6.6645l14.9087.0009a10.3181,10.3181,0,0,1,10.317,10.3171l0,115.81H18.1972Z" style="fill:#6183ff"/><path d="M182.3023,260.415V293.94a10.315,10.315,0,0,1-10.3165,10.3165H140.184a20.1019,20.1019,0,0,0-19.6185,24.4666c16.94,76.5064,16.9392,85.2175,16.9387,88.08a37.2547,37.2547,0,1,1-74.5094,0c0-2.8632,0-11.5772,16.9392-88.0792a20.1314,20.1314,0,0,0-19.6176-24.4666H28.5147a10.318,10.318,0,0,1-10.317-10.317V260.4141ZM85.6672,415.9087A14.5824,14.5824,0,1,0,100.25,401.3264,14.5818,14.5818,0,0,0,85.6672,415.9087Z" style="fill:#6183ff"/><path d="M192.6112,54.1572a9.0836,9.0836,0,0,1-.1484,2.1331L180.0955,119.453c-.6236,3.182-2.8572,5.4195-5.4251,5.4367l-74.2038.4785H26.2336c-2.5813,0-4.8307-2.2451-5.4543-5.4434L8.412,56.5229a9.0951,9.0951,0,0,1-.1477-2.1906C3.48,52.4077,0,46.6915,0,39.9551c0-8.3116,5.2954-15.0729,11.8051-15.0729S23.61,31.6435,23.61,39.9551a16.9336,16.9336,0,0,1-4.31,11.6354L34.7843,71.51c3.9133,5.0348,9.3437,7.9211,14.8992,7.9211,6.5689,0,12.832-3.9831,16.7761-10.6563l25.4466-43.05a17.3274,17.3274,0,0,1-3.4613-10.6515C88.4449,6.7613,93.74,0,100.25,0s11.8051,6.7613,11.8051,15.0729A17.4048,17.4048,0,0,1,108.7759,25.47c.0068.0115.015.0211.0218.0335L134.06,68.6721c3.9426,6.7374,10.2281,10.76,16.8158,10.76,5.6065,0,10.8787-2.7878,14.843-7.85L181.3,51.6871a16.8806,16.8806,0,0,1-4.41-11.732c0-8.3116,5.2955-15.0729,11.8052-15.0729S200.5,31.6435,200.5,39.9551C200.5,46.5116,197.1983,52.0881,192.6112,54.1572Z" style="fill:#6183ff"/><path d="M18.8516,110.0425l1.9277,9.8823s.8961,5.4434,5.4544,5.4434S174.67,124.89,174.67,124.89s4.3906-.1536,5.4251-5.4367,1.3178-6.7305,1.3178-6.7305-2.0363,7.5028,3.7255,4.9829-2.6826,15.8874-5.733,16.1924-152.9072,0-152.9072,0S9.9971,128.7091,13.405,110.0425" style="fill:#fff"/></g></g></svg>
+                            </span>
+                            <span>{{ getScore('drawer', player.id) }}</span>
+                            <span class="top-icon top-guesser">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200.5 254.0862"><g data-name="Layer 2"><g data-name="Capa 1"><path d="M174.0372,133.2315q-11.91-14.6379-32.3535-23.1236a115.3681,115.3681,0,0,0-44.6595-8.485,118.0078,118.0078,0,0,0-34.5369,5.0114A96.592,96.592,0,0,0,34.1044,120.18a67.6994,67.6994,0,0,0-18.9562,20.2949,47.27,47.27,0,0,0-7.047,24.6621,48.1562,48.1562,0,0,0,8.9811,27.89q8.9822,12.9992,24.5631,21.8333a63.0773,63.0773,0,0,1-2.5814,7.5406q-1.4886,3.5725-2.6793,5.8574a40.3135,40.3135,0,0,1-3.2261,5.0619q-2.0329,2.778-3.0756,3.9192t-3.4242,3.7711q-2.38,2.632-3.0756,3.4257a6.928,6.928,0,0,0-.7943.8923q-.6941.8421-.6949.8422l-.5954.892q-.4969.7461-.4474.9409a2.6454,2.6454,0,0,1-.1981.9911,1.3119,1.3119,0,0,0,.0493,1.1933v.0987a4.99,4.99,0,0,0,1.7374,2.8771,3.8872,3.8872,0,0,0,3.0269.8909,74.493,74.493,0,0,0,11.3138-2.1815,108.4719,108.4719,0,0,0,45.6522-24.0184,135.7853,135.7853,0,0,0,14.3894.7946,115.3324,115.3324,0,0,0,44.66-8.4874q20.4433-8.4843,32.3522-23.1216,11.91-14.6316,11.91-31.9034Q185.9446,147.8687,174.0372,133.2315Z" style="fill:#6183ff"/><path d="M192.6112,54.1572a9.0836,9.0836,0,0,1-.1484,2.1331L180.0955,119.453c-.6236,3.182-2.8572,5.4195-5.4251,5.4367l-74.2038.4785H26.2336c-2.5813,0-4.8307-2.2451-5.4543-5.4434L8.412,56.5229a9.0951,9.0951,0,0,1-.1477-2.1906C3.48,52.4077,0,46.6915,0,39.9551c0-8.3116,5.2954-15.0729,11.8051-15.0729S23.61,31.6435,23.61,39.9551a16.9336,16.9336,0,0,1-4.31,11.6354L34.7843,71.51c3.9133,5.0348,9.3437,7.9211,14.8992,7.9211,6.5689,0,12.832-3.9831,16.7761-10.6563l25.4466-43.05a17.3274,17.3274,0,0,1-3.4613-10.6515C88.4449,6.7613,93.74,0,100.25,0s11.8051,6.7613,11.8051,15.0729A17.4048,17.4048,0,0,1,108.7759,25.47c.0068.0115.015.0211.0218.0335L134.06,68.6721c3.9426,6.7374,10.2281,10.76,16.8158,10.76,5.6065,0,10.8787-2.7878,14.843-7.85L181.3,51.6871a16.8806,16.8806,0,0,1-4.41-11.732c0-8.3116,5.2955-15.0729,11.8052-15.0729S200.5,31.6435,200.5,39.9551C200.5,46.5116,197.1983,52.0881,192.6112,54.1572Z" style="fill:#6183ff"/><path d="M18.8516,110.0425l1.9277,9.8823s.8961,5.4434,5.4544,5.4434S174.67,124.89,174.67,124.89s4.3906-.1536,5.4251-5.4367,1.3178-6.7305,1.3178-6.7305-2.0363,7.5028,3.7255,4.9829-2.6826,15.8874-5.733,16.1924-152.9072,0-152.9072,0S9.9971,128.7091,13.405,110.0425" style="fill:#fff"/></g></g></svg>
+                            </span>
+                            <span>{{ getScore('guesser', player.id) }}</span>
+                        </div>
+                    </li>
+                    <!--<li v-for="player in players" class="player guessing" v-bind:class="{'drawing': player.status === 'drawing', 'correct': player.status === 'correct', 'new': player.status === 'new', 'me': me.id === player.id}">
+                        {{player.name ? player.name : "Anoniem"}} 
+                        <span v-if="getTopDrawer() === player.id" class="top-icon top-drawer">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200.5 454.0579"><g data-name="Layer 2"><g data-name="Capa 1"><path d="M18.1972,123.041a10.3168,10.3168,0,0,1,10.3171-10.3171H50.4109a10.3188,10.3188,0,0,1,10.1346,8.3838L67.92,159.7738l7.6246-38.7269a10.3163,10.3163,0,0,1,10.123-8.3235h47.4973a10.3147,10.3147,0,0,1,9.7378,6.9092l2.1293,6.0833,2.3962-6.3289a10.3168,10.3168,0,0,1,9.6488-6.6645l14.9087.0009a10.3181,10.3181,0,0,1,10.317,10.3171l0,115.81H18.1972Z" style="fill:#6183ff"/><path d="M182.3023,260.415V293.94a10.315,10.315,0,0,1-10.3165,10.3165H140.184a20.1019,20.1019,0,0,0-19.6185,24.4666c16.94,76.5064,16.9392,85.2175,16.9387,88.08a37.2547,37.2547,0,1,1-74.5094,0c0-2.8632,0-11.5772,16.9392-88.0792a20.1314,20.1314,0,0,0-19.6176-24.4666H28.5147a10.318,10.318,0,0,1-10.317-10.317V260.4141ZM85.6672,415.9087A14.5824,14.5824,0,1,0,100.25,401.3264,14.5818,14.5818,0,0,0,85.6672,415.9087Z" style="fill:#6183ff"/><path d="M192.6112,54.1572a9.0836,9.0836,0,0,1-.1484,2.1331L180.0955,119.453c-.6236,3.182-2.8572,5.4195-5.4251,5.4367l-74.2038.4785H26.2336c-2.5813,0-4.8307-2.2451-5.4543-5.4434L8.412,56.5229a9.0951,9.0951,0,0,1-.1477-2.1906C3.48,52.4077,0,46.6915,0,39.9551c0-8.3116,5.2954-15.0729,11.8051-15.0729S23.61,31.6435,23.61,39.9551a16.9336,16.9336,0,0,1-4.31,11.6354L34.7843,71.51c3.9133,5.0348,9.3437,7.9211,14.8992,7.9211,6.5689,0,12.832-3.9831,16.7761-10.6563l25.4466-43.05a17.3274,17.3274,0,0,1-3.4613-10.6515C88.4449,6.7613,93.74,0,100.25,0s11.8051,6.7613,11.8051,15.0729A17.4048,17.4048,0,0,1,108.7759,25.47c.0068.0115.015.0211.0218.0335L134.06,68.6721c3.9426,6.7374,10.2281,10.76,16.8158,10.76,5.6065,0,10.8787-2.7878,14.843-7.85L181.3,51.6871a16.8806,16.8806,0,0,1-4.41-11.732c0-8.3116,5.2955-15.0729,11.8052-15.0729S200.5,31.6435,200.5,39.9551C200.5,46.5116,197.1983,52.0881,192.6112,54.1572Z" style="fill:#6183ff"/><path d="M18.8516,110.0425l1.9277,9.8823s.8961,5.4434,5.4544,5.4434S174.67,124.89,174.67,124.89s4.3906-.1536,5.4251-5.4367,1.3178-6.7305,1.3178-6.7305-2.0363,7.5028,3.7255,4.9829-2.6826,15.8874-5.733,16.1924-152.9072,0-152.9072,0S9.9971,128.7091,13.405,110.0425" style="fill:#fff"/></g></g></svg>
+                        </span>
+                        <span v-if="getTopGuesser() === player.id" class="top-icon top-guesser">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200.5 254.0862"><g data-name="Layer 2"><g data-name="Capa 1"><path d="M174.0372,133.2315q-11.91-14.6379-32.3535-23.1236a115.3681,115.3681,0,0,0-44.6595-8.485,118.0078,118.0078,0,0,0-34.5369,5.0114A96.592,96.592,0,0,0,34.1044,120.18a67.6994,67.6994,0,0,0-18.9562,20.2949,47.27,47.27,0,0,0-7.047,24.6621,48.1562,48.1562,0,0,0,8.9811,27.89q8.9822,12.9992,24.5631,21.8333a63.0773,63.0773,0,0,1-2.5814,7.5406q-1.4886,3.5725-2.6793,5.8574a40.3135,40.3135,0,0,1-3.2261,5.0619q-2.0329,2.778-3.0756,3.9192t-3.4242,3.7711q-2.38,2.632-3.0756,3.4257a6.928,6.928,0,0,0-.7943.8923q-.6941.8421-.6949.8422l-.5954.892q-.4969.7461-.4474.9409a2.6454,2.6454,0,0,1-.1981.9911,1.3119,1.3119,0,0,0,.0493,1.1933v.0987a4.99,4.99,0,0,0,1.7374,2.8771,3.8872,3.8872,0,0,0,3.0269.8909,74.493,74.493,0,0,0,11.3138-2.1815,108.4719,108.4719,0,0,0,45.6522-24.0184,135.7853,135.7853,0,0,0,14.3894.7946,115.3324,115.3324,0,0,0,44.66-8.4874q20.4433-8.4843,32.3522-23.1216,11.91-14.6316,11.91-31.9034Q185.9446,147.8687,174.0372,133.2315Z" style="fill:#6183ff"/><path d="M192.6112,54.1572a9.0836,9.0836,0,0,1-.1484,2.1331L180.0955,119.453c-.6236,3.182-2.8572,5.4195-5.4251,5.4367l-74.2038.4785H26.2336c-2.5813,0-4.8307-2.2451-5.4543-5.4434L8.412,56.5229a9.0951,9.0951,0,0,1-.1477-2.1906C3.48,52.4077,0,46.6915,0,39.9551c0-8.3116,5.2954-15.0729,11.8051-15.0729S23.61,31.6435,23.61,39.9551a16.9336,16.9336,0,0,1-4.31,11.6354L34.7843,71.51c3.9133,5.0348,9.3437,7.9211,14.8992,7.9211,6.5689,0,12.832-3.9831,16.7761-10.6563l25.4466-43.05a17.3274,17.3274,0,0,1-3.4613-10.6515C88.4449,6.7613,93.74,0,100.25,0s11.8051,6.7613,11.8051,15.0729A17.4048,17.4048,0,0,1,108.7759,25.47c.0068.0115.015.0211.0218.0335L134.06,68.6721c3.9426,6.7374,10.2281,10.76,16.8158,10.76,5.6065,0,10.8787-2.7878,14.843-7.85L181.3,51.6871a16.8806,16.8806,0,0,1-4.41-11.732c0-8.3116,5.2955-15.0729,11.8052-15.0729S200.5,31.6435,200.5,39.9551C200.5,46.5116,197.1983,52.0881,192.6112,54.1572Z" style="fill:#6183ff"/><path d="M18.8516,110.0425l1.9277,9.8823s.8961,5.4434,5.4544,5.4434S174.67,124.89,174.67,124.89s4.3906-.1536,5.4251-5.4367,1.3178-6.7305,1.3178-6.7305-2.0363,7.5028,3.7255,4.9829-2.6826,15.8874-5.733,16.1924-152.9072,0-152.9072,0S9.9971,128.7091,13.405,110.0425" style="fill:#fff"/></g></g></svg>
+                        </span>
+                    </li>
+                    <li class="player correct">Isaac</li>
+                    <li class="player guessing">Karel</li>
+                    <li class="player guessing">Bas</li> -->
+                </ul>
+            </div>
+            <div class="timer" v-if="timeLeft &gt;= 0" v-bind:class="{ 'close': timeLeft &lt;= 10, 'urgent': timeLeft &lt;= 3 }">
+                <span class="seconds">{{timeLeft}}</span> sec
+            </div>
+        </div>
+        <div class="bottom"></div>
+    </div>
+    <script src="main.js"></script>
+</body>
+
+</html>
