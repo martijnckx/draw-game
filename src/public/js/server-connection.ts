@@ -87,7 +87,7 @@ export default class PictionaryServerConnection {
     }
 
     private createWs(onOpen: () => void): void {
-        this.ws = new WebSocket(`ws://${window.location.host}/socket`);
+        this.ws = new WebSocket(`wss://${window.location.host}/socket`);
 
         this.ws.onmessage = (message: MessageEvent) => {
             if (message.data instanceof Blob) {
