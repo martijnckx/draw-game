@@ -11,8 +11,7 @@
 
 <body>
     <noscript class="noscript">
-        <span class="noscript-message">Je hebt JavaScript nodig om Pictionary te spelen. Zet JavaScript aan of gebruik
-            een modernere browser.</span>
+        <span class="noscript-message">You need JavaScript to play Pictionary. Please enable JavaScript or use a more modern browser.</span>
     </noscript>
     <div id="app" class="container">
 
@@ -26,18 +25,18 @@
             <div class="login"  v-bind:class="{ 'mode-selector': !loginMode, 'new-game': loginMode == 'new' }">
                 <span class="info" v-if="!loginMode">Welkom bij Pictionary!</span>
                 <div class="login-mode-buttons-container" v-if="!loginMode">
-                    <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('new')">Nieuw spel</button>
-                    <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('join')">Meedoen</button>
+                    <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('new')">New game</button>
+                    <button class="login-mode-button" type="button" v-if="!loginMode" v-on:click="setLoginMode('join')">Join a game</button>
                 </div>
                 <template v-if="loginMode">
-                    <span class="info">Je kan bijna beginnen.</span>
+                    <span class="info">You can almost start.</span>
                     <form action="#" class="login-form" v-on:submit="login">
                         <div class="login-room-container input-container" v-if="loginMode !== 'new'">
                             <label for="login-room-input" class="login-room-label">Room</label>
                             <input v-model="room" type="text" name="room" id="login-room-input" maxlength="4" v-on:focus="roomInClipboard">
                         </div>
                         <div class="login-name-container input-container">
-                            <label for="login-name-input" class="login-name-label">Je naam</label>
+                            <label for="login-name-input" class="login-name-label">Your name</label>
                             <input v-model="me.name" type="text" name="name" id="login-name-input" maxlength="12">
                         </div>
                     </form>
@@ -53,11 +52,11 @@
             </h1>
             <div class="rtc">
                 <div class="rtc-start-container" v-if="!rtcStarted">
-                    <button class="rtc-start" type="button" v-on:click="startRTC">Start Videochat</button>
+                    <button class="rtc-start" type="button" v-on:click="startRTC">Start videochat</button>
                 </div>
                 <div class="mute" v-bind:class="{ hidden: !rtcStarted }">
                     <input v-model="muteEveryone" type="checkbox" id="mute" name=mute v-on:change="toggleMute">
-                    <label for="mute">Mute iedereen:</label>
+                    <label for="mute">Mute everyone:</label>
                     <label for="mute" class="styled-checkbox clickable"></label>
                 </div>
                 <div class="cameras" id="cameras" v-bind:class="{ hidden: !rtcStarted }">
@@ -70,21 +69,18 @@
         </div>
         <main class="center">
             <div class="objective">
-                <span class="info" v-if="!gameStarted">Wacht op de volgende ronde...</span>
-                <span class="info" v-if="gameStarted && !word">Raad het woord!</span>
-                <span class="info" v-if="gameStarted && word">Teken </span>
+                <span class="info" v-if="!gameStarted">Waiting for the next round...</span>
+                <span class="info" v-if="gameStarted && !word">Guess the word!</span>
+                <span class="info" v-if="gameStarted && word">Draw </span>
                 <span class="goal" v-if="gameStarted && word">{{word}}</span>
             </div>
             <div class="drawing-board">
                 <div class="canvas-container">
                     <div class="waiting-area" v-if="!gameStarted">
-                        <p>Stuur de room-code naar je vrienden, zodat ze kunnen meespelen. Je kan rechtsboven op de code klikken om een uitnodigings-link te kopiëren. <span v-if="me.owner">Wanneer iedereen er is, start je het spel door op de knop te drukken!</span><span v-if="!me.owner"><br><br>De maker van de room zal het spel starten.</span></p>
+                        <p>Send the room code to your friends so they can play along. You can click on the code at the top right to copy an invitation link. <span v-if="me.owner">When everyone is there, start the game by pressing the button!</span><span v-if="!me.owner"><br><br>The creator of the room will start the game.</span></p>
                         <button class="start-game-button" type="button" v-on:click="startGame" v-if="me.owner" :disabled="players.length &lt; 2">Start het spel</button>
                     </div>
-                    <canvas v-bind:class="{ 'erasing': eraser }"id="canvas" width="580" height="580">Je browser ondersteunt geen &lt;canvas&gt;. Gebruik
-                        een
-                        modernere browser om te
-                        spelen.</canvas>
+                    <canvas v-bind:class="{ 'erasing': eraser }"id="canvas" width="580" height="580">Your browser does not support a &lt;canvas&gt;. Use a more modern browser to play this game.</canvas>
                     <div class="controls" v-if="drawerId === me.id">
                         <div class="control pencil clickable" v-bind:class="{ active: !eraser && !fillBucket }"
                             @click="useEraser(false)">
@@ -176,7 +172,7 @@
                         </li>
                     </ul>
                     <form action="#" id="chat-input-form" class="chat-input-container"  v-on:submit="sendChatMessage">
-                        <input v-model="chatMessage" type="text" placeholder="Begin te typen..." class="chat-input"  maxlength="100">
+                        <input v-model="chatMessage" type="text" placeholder="Start typing..." class="chat-input"  maxlength="100">
                     </form>
                 </div>
             </div>

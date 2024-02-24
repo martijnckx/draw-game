@@ -63,13 +63,13 @@ export default class PictionaryWebRTC {
         } catch (e) {
             // TODO: Handle correctly
             if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                this.notifier.error('Er werd geen toestemming voor camera & microfoon gegeven.', 10);
+                this.notifier.error('You did not give permission for your microphone or camera.', 10);
                 throw new MediaNotAllowedError();
             } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-                this.notifier.error('Er werd geen camera / microfoon gevonden.');
+                this.notifier.error('We did not detect a microphone or camera.');
                 throw new MediaNotConnectedError();
             } else {
-                this.notifier.error('Er liep iets mis met het verbinden met de camera / microfoon.');
+                this.notifier.error('Something went wrong while trying to connect to you microphone or camera.');
                 console.error(e);
                 throw new MediaNotAllowedError();
             }
@@ -86,7 +86,7 @@ export default class PictionaryWebRTC {
             const offer = await peer.connection.createOffer();
             await peer.connection.setLocalDescription(offer);
         } catch (e) {
-            this.notifier.error(`Er liep iets mis bij het verzenden van video naar ${playerName}`);
+            this.notifier.error(`Something went wrong while trying to send your video to ${playerName}`);
             console.error(e);
             return;
         }
@@ -150,7 +150,7 @@ export default class PictionaryWebRTC {
             const answer = await peer.connection.createAnswer();
             await peer.connection.setLocalDescription(answer);
         } catch (e) {
-            this.notifier.error(`Er liep iets mis bij het verzenden van video naar ${playerName}`);
+            this.notifier.error(`Something went wrong while trying to send video to ${playerName}`);
             console.error(e);
             return;
         }

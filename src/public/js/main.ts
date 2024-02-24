@@ -57,7 +57,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function getInviteText(): string {
         if (!app || !app.room) return '';
-        return `Speel mee met pictionary op ${window.location.protocol}//${window.location.hostname}${window.location.port === '80' || window.location.port === '' ? '' : `:${window.location.port}`}?room=${app.room},\nof ga naar ${window.location.protocol}//${window.location.hostname}${window.location.port === '80' || window.location.port === '' ? '' : `:${window.location.port}`} en gebruik de room ${app.room}`
+        return `Join the pictionary game at ${window.location.protocol}//${window.location.hostname}${window.location.port === '80' || window.location.port === '' ? '' : `:${window.location.port}`}?room=${app.room},\nor go to ${window.location.protocol}//${window.location.hostname}${window.location.port === '80' || window.location.port === '' ? '' : `:${window.location.port}`} and join the room with code ${app.room}`
     }
 
     function roomInClipboard() {
@@ -79,7 +79,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     function setCopyTooltip(s: string) {
         app.copyTooltip = s;
-        setTimeout(() => {app.copyTooltip = 'Klik om te kopiëren';}, 1000);
+        setTimeout(() => {app.copyTooltip = 'Click to copy';}, 1000);
     }
 
     function copyRoomInvite(e: Event) {
@@ -88,19 +88,19 @@ document.addEventListener('DOMContentLoaded', function () {
         navigator.clipboard
             .writeText(getInviteText())
             .then(() => {
-                setCopyTooltip('Gekopieerd!');
+                setCopyTooltip('Copied to clipboard!');
             })
             .catch((e) => {
-                setCopyTooltip('Er ging iets mis');
+                setCopyTooltip('Something went wrong');
             });
         } else {
             const copyText: HTMLInputElement | null = document.querySelector("#room-code");
             if (copyText) {
                 copyText.select();
                 document.execCommand("copy");
-                setCopyTooltip('Gekopieerd!');
+                setCopyTooltip('Copied to clipboard!');
             } else {
-                setCopyTooltip('Er ging iets mis');
+                setCopyTooltip('Something went wrong');
             }
         }
     }
@@ -161,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function () {
         else if (app.loginMode == 'join') {
             pictionary.serverConnection.joinRoom(app.room.trim(), app.me.name.trim());
         } else {
-            notifier.error("Die actie bestaat niet");
+            notifier.error("That action does not exist");
         }
     }
 
@@ -183,7 +183,7 @@ document.addEventListener('DOMContentLoaded', function () {
                 return (player as any).name;
             }
         }
-        return 'Anoniem';
+        return 'Anonymous';
     }
 
     async function startRTC(e: Event) {
@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', function () {
             rtcStarted: false,
             selectColorsVisible: false,
             camerasElement: null,
-            copyTooltip: 'Klik om te kopiëren',
+            copyTooltip: 'Click to copy',
             muted: false,
             messages: [],
             players: [],
@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', function () {
             status: 'new',
             videoActive: player.videoActive,
         });
-        pictionary.addChatMessage('system', `Hartelijk welkom, ${player.name}!`);
+        pictionary.addChatMessage('system', `Welcome, ${player.name}!`);
     });
 
     pictionary.serverConnection.on('player-left', (message: BaseMessageOutgoing) => {
@@ -360,7 +360,7 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         }
 
-        pictionary.addChatMessage('system', `${getPlayerName(m.playerId)} heeft het spel verlaten!`);
+        pictionary.addChatMessage('system', `${getPlayerName(m.playerId)} has left the game!`);
 
         if (playerIndex >= 0) {
             app.players.splice(playerIndex, 1);
@@ -398,10 +398,10 @@ document.addEventListener('DOMContentLoaded', function () {
             app.word = m.word;
         }
         else app.word = '';
-        if (!m.prev_word) pictionary.addChatMessage('system', `Pictionary gaat beginnen. Succes!`);
-        else if (m.reason === 'everyone-correct') pictionary.addChatMessage('system', `Goed gedaan iedereen! Het woord was ${m.prev_word}.`);
-        else if (m.reason === 'time-up') pictionary.addChatMessage('system', `De tijd is om! Het woord was ${m.prev_word}.`);
-        else pictionary.addChatMessage('system', `Het woord was ${m.prev_word}.`);
+        if (!m.prev_word) pictionary.addChatMessage('system', `Pictionary will start. Good luck!`);
+        else if (m.reason === 'everyone-correct') pictionary.addChatMessage('system', `Well done everyone! The word was ${m.prev_word}.`);
+        else if (m.reason === 'time-up') pictionary.addChatMessage('system', `Time's up! The word was ${m.prev_word}.`);
+        else pictionary.addChatMessage('system', `The word was ${m.prev_word}.`);
     });
 
     pictionary.serverConnection.on('correct-guess', (message: BaseMessageOutgoing) => {
@@ -410,16 +410,16 @@ document.addEventListener('DOMContentLoaded', function () {
         for (let player of app.players) {
             if ((player as any).id === m.playerId) (player as any).status = 'correct';
         }
-        pictionary.addChatMessage('system', `${getPlayerName(m.playerId)} heeft het woord geraden!`);
+        pictionary.addChatMessage('system', `${getPlayerName(m.playerId)} has guessed the word!`);
     });
 
     pictionary.serverConnection.on('close-guess', (message: BaseMessageOutgoing) => {
         const m = message as CloseGuessMessage;
-        pictionary.addChatMessage('system', `${getPlayerName(m.playerId)} is kortbij.`);
+        pictionary.addChatMessage('system', `${getPlayerName(m.playerId)} is close.`);
     });
 
     pictionary.serverConnection.on('spoiler-alert', (message: BaseMessageOutgoing) => {
-        pictionary.addChatMessage('system', `Niets voorzeggen! Bericht niet verzonden.`);
+        pictionary.addChatMessage('system', `No spoilers! We didn't send your message.`);
     });
 
     pictionary.serverConnection.on('coords', (message: BaseMessageOutgoing) => {
@@ -441,7 +441,7 @@ document.addEventListener('DOMContentLoaded', function () {
     });
 
     pictionary.serverConnection.on('already-correct', (message: BaseMessageOutgoing) => {
-        pictionary.addChatMessage('system', `Je hebt het al geraden! Bericht niet verzonden.`);
+        pictionary.addChatMessage('system', `You already guessed the word! Didn't send the message.`);
     });
 
     pictionary.serverConnection.on('player-changed-video-status', (message: BaseMessageOutgoing) => {
